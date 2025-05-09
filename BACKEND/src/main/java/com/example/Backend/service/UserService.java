@@ -26,6 +26,8 @@ public class UserService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final long JWT_EXPIRATION = 86400000; // 24 hours in milliseconds
     private final Key jwtSecretKey;
+    private final String jwtSecret = "aslsdadadq9iqpweipqowie293i112313sdadadadqweqe1smgs90329109310"; // Replace with a
+                                                                                                       // secure key
 
     @Autowired
     public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, Key jwtSecretKey) {
@@ -120,35 +122,21 @@ public class UserService {
     }
 
     public String generateJwtTokenForOAuthUser(User user) {
-        // check if user exists
         Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
         User savedUser;
-
         if (existingUser.isPresent()) {
-            // Update existing user
-            User userToUpdate = existingUser.get();
-            userToUpdate.setName(user.getName());
-            userToUpdate.setProfileImage(user.getProfileImage());
-            savedUser = userRepository.save(userToUpdate);
+            savedUser = existingUser.get();
         } else {
-            // Create new user
-            if (user.getFollowingUsers() == null) {
-                user.setFollowingUsers(new ArrayList<>());
-            }
-
-            if (user.getFollowedUsers() == null) {
-                user.setFollowedUsers(new ArrayList<>());
-            }
-
-            if (user.getSkills() == null) {
-                user.setSkills(new ArrayList<>());
-            }
-
             savedUser = userRepository.save(user);
         }
 
-        // generate token
-        return generateJwtToken(savedUser);
+        Key key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+        return Jwts.builder()
+                .setSubject(savedUser.getId())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 day
+                .signWith(key)
+                .compact();
     }
 
     public UserProfileDTO convertToProfileDTO(User user) {
