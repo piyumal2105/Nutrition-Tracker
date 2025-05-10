@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../../utils/api";
-import { PlusCircle, Check, AlertCircle } from "lucide-react";
+import { PlusCircle, Check, AlertCircle, Trash2 } from "lucide-react";
 
 const FoodLog = ({ userId, date, calorieGoal = 2000 }) => {
   const [foodLog, setFoodLog] = useState({
@@ -56,6 +56,29 @@ const FoodLog = ({ userId, date, calorieGoal = 2000 }) => {
       setFoodLog({ mealType: "", foodName: "", calories: "", date });
     } catch (err) {
       setMessage(err.response?.data || "Failed to log food");
+      setStatus("error");
+    } finally {
+      setIsLoading(false);
+
+      // Clear message after 3 seconds
+      setTimeout(() => {
+        setMessage("");
+        setStatus("");
+      }, 3000);
+    }
+  };
+
+  // Handle food log deletion
+  const handleDelete = async (foodLogId) => {
+    setIsLoading(true);
+    try {
+      const response = await api.delete(
+        `/nutrition/food/${userId}/${foodLogId}`
+      );
+      setMessage(response.data || "Food log deleted successfully!");
+      setStatus("success");
+    } catch (err) {
+      setMessage(err.response?.data || "Failed to delete food log");
       setStatus("error");
     } finally {
       setIsLoading(false);
@@ -209,15 +232,28 @@ const FoodLog = ({ userId, date, calorieGoal = 2000 }) => {
           </h3>
           <div className="divide-y divide-gray-100">
             {recentLogs.slice(0, 3).map((log, index) => (
-              <div key={index} className="py-3 flex justify-between">
+              <div
+                key={index}
+                className="py-3 flex justify-between items-center"
+              >
                 <div>
                   <p className="font-medium">{log.foodName}</p>
                   <p className="text-sm text-gray-500 capitalize">
                     {log.mealType}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="flex items-center space-x-4">
                   <p className="font-bold">{log.calories} kcal</p>
+                  <button
+                    onClick={() => handleDelete(log.id)}
+                    disabled={isLoading}
+                    className={`text-red-500 hover:text-red-700 transition-colors ${
+                      isLoading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                    title="Delete entry"
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </div>
               </div>
             ))}

@@ -69,4 +69,9 @@ public class NutritionController {
             return ResponseEntity.badRequest().body("Invalid start date format. Use YYYY-MM-DD.");
         }
     }
+
+    @DeleteMapping("/food/{userId}/{foodLogId}")
+    public ResponseEntity<?> deleteFoodLog(@PathVariable String userId, @PathVariable String foodLogId) {
+        return nutritionService.deleteFoodLog(userId, foodLogId);
+    }
 }

@@ -188,4 +188,29 @@ public class NutritionService {
 
         return ResponseEntity.ok(response);
     }
+
+    public ResponseEntity<?> deleteFoodLog(String userId, String foodLogId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+
+        Optional<FoodLog> foodLogOpt = foodLogRepository.findById(foodLogId);
+        if (foodLogOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Food log not found");
+        }
+
+        FoodLog foodLog = foodLogOpt.get();
+        if (!foodLog.getUserId().equals(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only delete your own food logs");
+        }
+
+        try {
+            foodLogRepository.deleteById(foodLogId);
+            return ResponseEntity.ok("Food log deleted successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to delete food log: " + e.getMessage());
+        }
+    }
 }
