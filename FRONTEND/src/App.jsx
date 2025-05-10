@@ -13,7 +13,9 @@ import Dashboard from "./pages/Dashboard.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import Reminders from "./components/Reminders.jsx";
 import { useContext, useEffect } from "react";
-import { AuthContext } from "./context/AuthContext";
+import { AuthContext } from "./context/AuthContext.jsx";
+import api from "./utils/api";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
 // Callback Component to handle OAuth redirect
 const AuthCallback = () => {
@@ -27,7 +29,29 @@ const AuthCallback = () => {
       token ? "present" : "missing"
     );
     if (token) {
-      login({ token });
+      // Fetch user data using the token
+      api
+        .get("/auth/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          console.log("AuthCallback: Response from /auth/me", response.data);
+          const userData = {
+            token,
+            id: response.data.id,
+            name: response.data.name,
+            email: response.data.email,
+            profileCompleted: response.data.profileCompleted || false,
+          };
+          login(userData);
+        })
+        .catch((err) => {
+          console.error(
+            "AuthCallback: Failed to fetch user data:",
+            err.response?.data
+          );
+          window.location.href = "/login?error=Authentication%20failed";
+        });
     } else {
       console.error("AuthCallback: No token provided");
       window.location.href = "/login?error=No%20token%20provided";
@@ -49,29 +73,31 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Reminders />
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route
-            path="/profile/complete"
-            element={
-              <ProtectedRoute>
-                <CompleteProfile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+        <ErrorBoundary>
+          <Reminders />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/oauth-success" element={<AuthCallback />} />
+            <Route
+              path="/profile/complete"
+              element={
+                <ProtectedRoute>
+                  <CompleteProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </ErrorBoundary>
       </AuthProvider>
     </BrowserRouter>
   );

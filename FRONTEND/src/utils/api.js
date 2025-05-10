@@ -12,7 +12,10 @@ api.interceptors.request.use(
     const token = localStorage.getItem("token");
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
-      console.log("api.js: Adding Authorization header with token");
+      console.log(
+        "api.js: Adding Authorization header with token:",
+        token.substring(0, 10) + "..."
+      );
     } else {
       console.log("api.js: No token found");
     }

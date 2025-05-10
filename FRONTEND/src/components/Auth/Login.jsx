@@ -13,9 +13,11 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await api.post("/auth/login", { email, password });
+      console.log("Login: Response from /auth/login", response.data);
       login(response.data);
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      console.error("Login: Error from /auth/login", err.response?.data);
+      setError(err.response?.data || "Login failed");
     }
   };
 
@@ -30,40 +32,36 @@ const Login = () => {
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
         {error && <p className="text-red-500 mb-4">{error}</p>}
-        <form onSubmit={handleLogin}>
-          <div className="mb-4">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email"
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              className="w-full p-2 border rounded"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
-          >
-            Login
-          </button>
-        </form>
+        <div className="mb-4">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            className="w-full p-2 border rounded"
+          />
+        </div>
+        <div className="mb-4">
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            className="w-full p-2 border rounded"
+          />
+        </div>
+        <button
+          onClick={handleLogin}
+          className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+        >
+          Login
+        </button>
         <div className="mt-4 text-center">
           <button
             onClick={handleGoogleLogin}
             className="w-full bg-red-500 text-white p-2 rounded hover:bg-red-600"
           >
-            Login with Google
+            Sign in with Google
           </button>
         </div>
         <p className="mt-4 text-center">

@@ -8,6 +8,8 @@ import com.example.Backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -22,6 +24,24 @@ public class AuthController {
     @Autowired
     public AuthController(UserService userService) {
         this.userService = userService;
+    }
+
+    @GetMapping("/oauth2/success")
+    @ResponseBody
+    public ResponseEntity<Object> handleOAuth2Success(@AuthenticationPrincipal OAuth2User principal) {
+        if (principal != null) {
+            String name = principal.getAttribute("name");
+            String email = principal.getAttribute("email");
+            String picture = principal.getAttribute("picture");
+            User user = new User();
+            user.setEmail(email);
+            user.setName(name);
+            user.setProfileImage(picture);
+            user.setRegistrationSource(RegistrationSource.GOOGLE);
+            return userService.createUser(user);
+        } else {
+            return ResponseEntity.badRequest().body("OAuth authentication failed");
+        }
     }
 
     @PostMapping("/register")
